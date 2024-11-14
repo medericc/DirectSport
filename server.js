@@ -1,19 +1,24 @@
+// server.js
 import express from 'express';
 import http from 'http';
 import { Server as socketIo } from 'socket.io';
 import mysql from 'mysql2';
 
+import cors from 'cors'; // Importer CORS
+
 // Configuration du serveur
 const app = express();
+app.use(cors()); // Activer CORS pour toutes les routes
+
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new socketIo(server);
 
 // Connexion à la base de données MySQL
 const db = mysql.createConnection({
-  host: 'localhost', // ou l'adresse de ton serveur MySQL
-  user: 'ton_utilisateur', // utilisateur MySQL
-  password: 'ton_mot_de_passe', // mot de passe MySQL
-  database: 'ta_base_de_donnees', // nom de ta base de données
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'testtest',
 });
 
 db.connect((err) => {
@@ -23,29 +28,50 @@ db.connect((err) => {
   }
   console.log('Connecté à la base de données MySQL');
 });
+// server.js
+app.get('/api/getPlayers', (req, res) => {
+  const query = 'SELECT player_id AS id, player_name AS name, team_id AS equipe FROM players';
+  db.query(query, (error, results) => {
+    if (error) {
+      console.error('Erreur lors de la récupération des joueurs:', error);
+      res.status(500).json({ error: 'Erreur lors de la récupération des joueurs' });
+      return;
+    }
+    res.json(results);
+  });
+});
 
 // Gestion des connexions Socket.io
 io.on('connection', (socket) => {
   console.log('Un utilisateur est connecté');
 
   // Envoie des stats en temps réel toutes les 10 secondes
-  setInterval(() => {
-    // Récupère les dernières stats depuis la base de données
-    db.query('SELECT joueur, buts, passes FROM stats ORDER BY id DESC LIMIT 1', (error, results) => {
+  const statsInterval = setInterval(() => {
+    const query = `
+      SELECT players.player_name AS joueur, players.jersey_number AS numero, 
+             players.points AS points, players.rebounds AS rebonds, players.assists AS assists, 
+             teams.team_id AS equipe
+      FROM players
+      JOIN teams ON players.team_id = teams.team_id
+      ORDER BY players.player_id DESC
+    `;
+
+    db.query(query, (error, results) => {
       if (error) {
         console.error('Erreur lors de la récupération des statistiques:', error);
         return;
       }
-      
+
       if (results.length > 0) {
-        const { joueur, buts, passes } = results[0];
-        socket.emit('liveStats', { joueur, buts, passes });
+        // Envoie les statistiques de tous les joueurs connectés via Socket.io
+        socket.emit('liveStats', results);
       }
     });
   }, 10000);
 
   socket.on('disconnect', () => {
     console.log('Un utilisateur est déconnecté');
+    clearInterval(statsInterval);
   });
 });
 

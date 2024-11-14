@@ -1,10 +1,15 @@
-// app/redux/store.ts
 import { configureStore } from '@reduxjs/toolkit';
+import matchReducer from './matchSlice';
 
 const store = configureStore({
   reducer: {
-    // Ici tu ajouteras les reducers que tu créeras plus tard
+    match: matchReducer,
   },
 });
+
+// Type pour le state global (RootState)
+export type RootState = ReturnType<typeof store.getState>;
+// Type pour le dispatch
+export type AppDispatch = typeof store.dispatch;
 
 export default store;

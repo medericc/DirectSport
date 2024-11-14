@@ -1,4 +1,5 @@
 // lib/useSocket.ts
+"use client";
 import { useEffect } from 'react';
 import socket from './sockets';  // Assure-toi que tu importes bien l'instance du socket
 

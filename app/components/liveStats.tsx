@@ -1,4 +1,5 @@
 // app/components/LiveStats.tsx
+"use client";
 import React, { useState } from 'react';
 import useSocket from '../lib/useSocket';
 
