@@ -35,9 +35,10 @@ const MatchPage: React.FC = () => {
   const team1 = useSelector((state: RootState) => state.match.team1 as Player[]);
   const team2 = useSelector((state: RootState) => state.match.team2 as Player[]);
 
+  // Connexion au WebSocket pour recevoir des stats sans envoyer automatiquement au chargement de la page
   const socket = useSocket('liveStats', (newStats: StatAction) => {
     setStats((prevStats) => [...prevStats, newStats]);
-    console.log('Stats received via socket:', newStats);
+    console.log('Stats reçues via socket:', newStats);
   });
 
   useEffect(() => {
@@ -61,7 +62,7 @@ const MatchPage: React.FC = () => {
 
     if (onCourt.some((p) => p.id === player.id)) {
       setOnCourt(onCourt.filter((p) => p.id !== player.id));
-      setIsPaused(true);  // Arrête le temps si un joueur est décoché
+      setIsPaused(true);
       console.log(`Temps arrêté car le joueur ${player.name} a été retiré du terrain`);
     } else if (onCourt.length < 5) {
       setOnCourt([...onCourt, player]);
@@ -77,9 +78,9 @@ const MatchPage: React.FC = () => {
   };
 
   const handleAddStat = (player: Player, statType: string) => {
-    setIsPaused(true);  // Arrête le temps pour l'enregistrement des stats
+    setIsPaused(true);
 
-    const minute = initialQuarterTime - timeLeft; // Temps écoulé
+    const minute = initialQuarterTime - timeLeft;
     const newStat: StatAction = {
       playerId: player.id,
       playerName: player.name,
@@ -88,7 +89,6 @@ const MatchPage: React.FC = () => {
       quarter: currentQuarter
     };
 
-    // Log des informations pour débogage
     console.log('Stat enregistrée :', {
       Joueur: player.name,
       Action: statType,
@@ -97,14 +97,11 @@ const MatchPage: React.FC = () => {
     });
 
     setStats((prevStats) => [...prevStats, newStat]);
-    dispatch(addPlayerStat(newStat));  // Enregistre dans Redux
+    dispatch(addPlayerStat(newStat));
+
+    // Émettre via WebSocket uniquement ici
     socket.emit('liveStats', newStat);
-    console.log('Stat enregistrée et envoyée via WebSocket:', {
-      Joueur: player.name,
-      Action: statType,
-      Minute: newStat.minute,
-      QuartTemps: currentQuarter,
-    });
+    console.log('Stat envoyée via WebSocket:', newStat);
   };
 
   const handleResumeMatch = () => {
