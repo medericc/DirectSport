@@ -41,6 +41,18 @@ app.get('/api/getPlayers', (req, res) => {
     res.json(results);
   });
 });
+io.on("connection", (socket) => {
+  console.log("Un utilisateur est connecté");
+
+  socket.on("updateOnCourt", ({ team1, team2 }) => {
+    console.log("Joueurs sur le terrain mis à jour :", { team1, team2 });
+    io.emit("updateOnCourt", { team1, team2 }); // Diffuse les données à tous les clients
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Un utilisateur est déconnecté");
+  });
+});
 
 io.on('connection', (socket) => {
   console.log('Un utilisateur est connecté');

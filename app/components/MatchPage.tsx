@@ -68,12 +68,17 @@ const MatchPage: React.FC = () => {
       setOnCourt([...onCourt, player]);
     }
   };
-
+  const emitOnCourtPlayers = () => {
+    if (onCourtTeam1.length === 5 && onCourtTeam2.length === 5) {
+      socket.emit("updateOnCourt", { team1: onCourtTeam1, team2: onCourtTeam2 });
+    }
+  };
   const handleStartMatch = () => {
     if (onCourtTeam1.length === 5 && onCourtTeam2.length === 5) {
       setIsMatchStarted(true);
+      emitOnCourtPlayers();
     } else {
-      alert("Chaque équipe doit avoir 5 joueurs sur le terrain pour démarrer le match.");
+      alert("Chaque équipe doit avoir 5 joueurs sur le terrain.");
     }
   };
 
@@ -106,6 +111,7 @@ const MatchPage: React.FC = () => {
 
   const handleResumeMatch = () => {
     setIsPaused(false);
+    emitOnCourtPlayers();
   };
 
   const handleFinishMatch = () => {
