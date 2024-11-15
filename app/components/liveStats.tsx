@@ -1,9 +1,10 @@
-// app/components/LiveStats.tsx
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../redux/store';
+import { addPlayerStat } from '../redux/matchSlice';
 import useSocket from '../lib/useSocket';
 
-// Définition du type pour les actions de statistiques
 interface StatAction {
   playerId: number;
   playerName: string;
@@ -13,28 +14,45 @@ interface StatAction {
 }
 
 const LiveStats = () => {
-  const [stats, setStats] = useState<StatAction[]>([]);
+  const dispatch = useDispatch();
 
-  // Utilisation du hook pour écouter les événements en temps réel
+  // Récupération des stats depuis Redux avec typage explicite
+  const statsFromRedux = useSelector((state: RootState) => state.match.stats as StatAction[]);
+
+  // Hook WebSocket pour recevoir les nouvelles stats en temps réel
   useSocket('liveStats', (newStat: StatAction) => {
-    setStats((prevStats) => [...prevStats, newStat]); // Ajoute la nouvelle action aux stats existantes
+    dispatch(addPlayerStat(newStat)); // Ajout des stats reçues dans Redux
   });
 
-  if (stats.length === 0) return <p>Loading stats...</p>;
+  useEffect(() => {
+    console.log('Stats actuelles depuis Redux:', statsFromRedux);
+  }, [statsFromRedux]);
+
+  if (statsFromRedux.length === 0) return <p>Aucune action enregistrée pour le moment.</p>;
 
   return (
     <div>
       <h2>Stats en temps réel</h2>
-      <ul>
-        {stats.map((stat, index) => (
-          <li key={index}>
-            <p>Joueur: {stat.playerName}</p>
-            <p>Minute: {stat.minute}</p>
-            <p>Quart-temps: {stat.quarter}</p>
-            <p>Action: {stat.statType}</p>
-          </li>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+        {statsFromRedux.map((stat, index) => (
+          <div
+            key={index}
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              padding: '10px',
+              minWidth: '150px',
+              textAlign: 'center',
+              backgroundColor: '#f9f9f9',
+            }}
+          >
+            <p style={{ fontWeight: 'bold' }}>Joueur : {stat.playerName}</p>
+            <p>Action : {stat.statType}</p>
+            <p>Minute : {stat.minute}m</p>
+            <p>Quart-temps : {stat.quarter}</p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
