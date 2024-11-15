@@ -1,4 +1,3 @@
-"use client";
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
@@ -21,6 +20,7 @@ const LiveStats = () => {
 
   // Hook WebSocket pour recevoir les nouvelles stats en temps réel
   useSocket('liveStats', (newStat: StatAction) => {
+    console.log('Nouvelle statistique reçue via WebSocket:', newStat); // Log pour vérifier la réception
     dispatch(addPlayerStat(newStat)); // Ajout des stats reçues dans Redux
   });
 

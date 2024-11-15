@@ -1,17 +1,20 @@
-// server.js
 import express from 'express';
 import http from 'http';
 import { Server as socketIo } from 'socket.io';
 import mysql from 'mysql2';
-
 import cors from 'cors'; // Importer CORS
 
 // Configuration du serveur
 const app = express();
-app.use(cors()); // Activer CORS pour toutes les routes
+app.use(cors({ origin: 'http://localhost:3000' })); // Autoriser uniquement l'origine de votre client
 
 const server = http.createServer(app);
-const io = new socketIo(server);
+const io = new socketIo(server, {
+  cors: {
+    origin: 'http://localhost:3000', // Autoriser le client local
+    methods: ['GET', 'POST'],
+  },
+});
 
 // Connexion à la base de données MySQL
 const db = mysql.createConnection({
@@ -28,7 +31,8 @@ db.connect((err) => {
   }
   console.log('Connecté à la base de données MySQL');
 });
-// server.js
+
+// Route API
 app.get('/api/getPlayers', (req, res) => {
   const query = 'SELECT player_id AS id, player_name AS name, team_id AS equipe FROM players';
   db.query(query, (error, results) => {
